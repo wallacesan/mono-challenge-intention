@@ -47,7 +47,6 @@ Deverão ser desenvolvidos dois serviços que, juntos, gerenciam a intenção de
 1. O banco e os sistemas devem estar containerizados.
 2. Toda a infraestrutura deve estar online na máquina local com, no máximo, 10 comandos em qualquer máquina Linux com Docker instalado.
 3. O Docker/Podman deve ser utilizado como base da infraestrutura.
-4. Os endpoints de listagem de dados podem ter recursos adicionais (filtragem e paginação) (opcionais), que serão avaliados.
 
 ## Observações
 
@@ -58,6 +57,7 @@ Deverão ser desenvolvidos dois serviços que, juntos, gerenciam a intenção de
 * Não é Obrigatório ter Documentação mas a facilidade no uso dos recursos será avaliada e a presença de uma documentação simplificada pode impactar positivamente ou negativamente.
 * A Organização do Repositório será avaliada
 * Os Commits serão avaliados, atente-se aos padrões que deseja utilizar
+* Os endpoints de listagem de dados podem ter recursos adicionais (filtragem e paginação) (opcionais), que serão avaliados.
 
 ## Guia
 
