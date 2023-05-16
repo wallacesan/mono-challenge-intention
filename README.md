@@ -38,7 +38,7 @@ Deverão ser desenvolvidos dois serviços que, juntos, gerenciam a intenção de
 
 1. Deverá ser desenvolvido em qualquer linguagem, exceto aquela usada no **Serviço de Produtos**.
 2. Pode ser Rest ou GraphQL.
-3. Deve ter no mínimo 1 endpoint (Query ou Mutation) para criar intenção e 1 endpoint (Query ou Mutation) para listar intenções de compra.
+3. Deve ter no mínimo 1 endpoint (REST ou GraphQL) para criar intenção e 1 endpoint (REST ou GraphQL) para listar intenções de compra.
 4. Este serviço deve usar no mínimo 1 banco de dados (MongoDB ou MySQL). Caso necessário, outros bancos de dados podem ser adicionados, sendo a escolha livre.
 5. A intenção de compra deve incluir: nome do cliente, produtos e endereço do cliente.
 
