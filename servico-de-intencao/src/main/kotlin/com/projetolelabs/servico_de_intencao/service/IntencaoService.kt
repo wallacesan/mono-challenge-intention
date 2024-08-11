@@ -1,19 +1,19 @@
 package com.projetolelabs.servico_de_intencao.service
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.projetolelabs.servico_de_intencao.controller.AtualizarIntencaoDTO
 import com.projetolelabs.servico_de_intencao.controller.IntencaoCompraDTO
 import com.projetolelabs.servico_de_intencao.controller.IntencaoCompraResponse
 import com.projetolelabs.servico_de_intencao.controller.IntencaoProdutoDTO
+import com.projetolelabs.servico_de_intencao.controller.IntencaoTipoUpdate
 import com.projetolelabs.servico_de_intencao.domain.Intencao
-import com.projetolelabs.servico_de_intencao.domain.Produto
 import com.projetolelabs.servico_de_intencao.repository.ClienteRepository
 import com.projetolelabs.servico_de_intencao.repository.IntencaoRepository
+import org.springframework.stereotype.Service
 
+@Service
 class IntencaoService(private val clienteRepository: ClienteRepository,
                       private val produtoExternoService: ProdutoExternoService,
-                      private val intencaoRepository: IntencaoRepository,
-                      private val objectMapper: ObjectMapper
+                      private val intencaoRepository: IntencaoRepository
 ) {
 
     fun criarIntencao(intencaoCompraDTO: IntencaoCompraDTO): IntencaoCompraResponse? {
@@ -24,20 +24,20 @@ class IntencaoService(private val clienteRepository: ClienteRepository,
             return null
         }
 
-        val produtos = intencaoCompraDTO.produtos?.map { produtoId ->
+        val produtos = intencaoCompraDTO.produtos?.mapNotNull { produtoId ->
             produtoExternoService.getProdutoExterno(produtoId.toLong())
-        }?.filterNotNull()?.toSet()
+        }?.toSet()
 
-        if (produtos == null || produtos.isEmpty() ){
+        if (produtos.isNullOrEmpty()){
             println("Produtos ${intencaoCompraDTO.produtos} não encontrados!")
             return null
         }
 
-        val produtosString = objectMapper.writeValueAsString(produtos)
+
         val intencao = Intencao(id = 0, nome = intencaoCompraDTO.nome, cliente = cliente.get(),
-            produtos = produtosString)
+            produtos = produtos.toList())
         val intencaoEntity = intencaoRepository.save(intencao)
-        return intencaoEntity.toIntencaoResponse(objectMapper)
+        return intencaoEntity.toIntencaoResponse()
     }
 
     // Criar uma função chamada "Buscar Intencão por Id" que receba uma id do tipo Long como argumento e retorne um objeto
@@ -53,9 +53,8 @@ class IntencaoService(private val clienteRepository: ClienteRepository,
         val idIntencao = intencaoEntity.get().id
         val produto = intencaoEntity.get().produtos
         val nome = intencaoEntity.get().nome
-        val produtoObj: List<Produto?>? = objectMapper.readValue(produto, object : TypeReference<List<Produto?>?>() {})
 
-        return IntencaoProdutoDTO(idIntencao, nome, produtoObj)
+        return IntencaoProdutoDTO(idIntencao, nome, produto)
     }
 
     // Criar uma função que se chama excluir intencao que receba uma id do tipo long e não retorne nada
@@ -78,8 +77,7 @@ class IntencaoService(private val clienteRepository: ClienteRepository,
         for (i in lista!!.indices) {
             println("Index $i tem o valor ${lista[i]}")
             val intencao = lista[i]
-            val produtoObj: List<Produto?>? = objectMapper.readValue(intencao.produtos, object : TypeReference<List<Produto?>?>() {})
-            val dto = IntencaoProdutoDTO(intencao.id, nome = intencao.nome, produtoObj)
+            val dto = IntencaoProdutoDTO(intencao.id, nome = intencao.nome, intencao.produtos)
             listaDTOS.add(dto)
         }
         return listaDTOS
@@ -87,33 +85,47 @@ class IntencaoService(private val clienteRepository: ClienteRepository,
     }
 
     // Criar uma função que irá receber uma id do tipo long e uma lista de produtos para serem atualizados
-    fun atualizarProdutos(id: Long, listaProdutos: List<String>): IntencaoCompraResponse? {
+    fun atualizarProdutos(id: Long, atualizacaoDTO: AtualizarIntencaoDTO): IntencaoCompraResponse? {
         val intencao = intencaoRepository.findById(id)
 
         if (intencao.isEmpty){
             return null
         }
 
-        val produtos = listaProdutos.map { produtoId ->
-            produtoExternoService.getProdutoExterno(produtoId.toLong())
-        }?.filterNotNull()?.toSet()
+        val listaProdutos = atualizacaoDTO.produtos
 
-        if (produtos == null || produtos.isEmpty() ){
+        var produtos = listaProdutos?.mapNotNull { produtoId ->
+            produtoExternoService.getProdutoExterno(produtoId.toLong())
+        }?.toSet()
+
+        val produtosOriginal = intencao.get().produtos.toMutableSet()
+
+        if (produtos == null || produtos.isEmpty()){
             return null
+
+        } else{
+            if (atualizacaoDTO.acao == IntencaoTipoUpdate.ADICIONAR){
+                produtosOriginal.addAll(produtos)
+                produtos = produtosOriginal
+            }
+            if (atualizacaoDTO.acao == IntencaoTipoUpdate.REMOVER){
+                produtosOriginal.removeAll(produtos)
+                produtos = produtosOriginal
+            }
         }
+
         intencao.get().apply {
-            this.produtos = objectMapper.writeValueAsString(produtos)
+            this.produtos = produtos.toList()
         }
-        return intencaoRepository.save(intencao.get()).toIntencaoResponse(objectMapper)
+        return intencaoRepository.save(intencao.get()).toIntencaoResponse()
     }
 
 }
 
-private fun Intencao.toIntencaoResponse(objectMapper: ObjectMapper): IntencaoCompraResponse {
+private fun Intencao.toIntencaoResponse(): IntencaoCompraResponse {
     val intencao = this
     val intencoesCliente = intencao.cliente.intencoes?.map {
-        val produtoObj: List<Produto?>? = objectMapper.readValue(it.produtos, object : TypeReference<List<Produto?>?>() {})
-        IntencaoProdutoDTO(idIntencao = it.id, nome = it.nome, produtos = produtoObj)
+        IntencaoProdutoDTO(idIntencao = it.id, nome = it.nome, produtos = it.produtos)
     }?.toList()
 
     return IntencaoCompraResponse(cliente = intencao.cliente.toClienteDTO(), intencoes = intencoesCliente )

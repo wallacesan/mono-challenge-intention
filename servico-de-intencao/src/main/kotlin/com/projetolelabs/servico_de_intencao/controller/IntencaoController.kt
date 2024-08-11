@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -27,8 +26,10 @@ class IntencaoController (val intencaoService: IntencaoService){
     }
 
     @PatchMapping("/intencao/{id}")
-    fun atualizarIntencao(@PathVariable("id") id:Long, @RequestBody produtos:List<String>): ResponseEntity<IntencaoCompraResponse> {
-        val intencao = intencaoService.atualizarProdutos(id, produtos)
+    fun atualizarIntencao(@PathVariable("id") id:Long, @RequestBody atualizacaoDTO: AtualizarIntencaoDTO):
+            ResponseEntity<IntencaoCompraResponse> {
+
+        val intencao = intencaoService.atualizarProdutos(id, atualizacaoDTO)
 
         if (intencao == null){
             return ResponseEntity.notFound().build()
