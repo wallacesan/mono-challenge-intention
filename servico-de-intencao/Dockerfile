@@ -1,5 +1,5 @@
 # Etapa 1: Construir a aplicação
-FROM maven:3.9.4-eclipse-temurin-17 AS build
+FROM maven:3.8.3-openjdk-17 as build
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -16,8 +16,7 @@ COPY src ./src
 # Compilar o projeto e criar o arquivo JAR
 RUN mvn package -DskipTests
 
-# Etapa 2: Criar a imagem final
-FROM eclipse-temurin:17-jdk-alpine
+FROM openjdk:17
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -26,7 +25,7 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 # Expor a porta em que a aplicação será executada
-EXPOSE 8080
+EXPOSE 8081
 
 # Comando de inicialização da aplicação
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar", "--server.address=0.0.0.0"]
