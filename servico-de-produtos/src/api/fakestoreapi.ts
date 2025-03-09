@@ -16,13 +16,21 @@ interface Rating {
 export const getProductsApiById = (id: number) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      resolve(
-        fetch(`https://fakestoreapi.com/products/${id}`)
-          .then(res => res.json())
-          .then(res => {
-            return res as Product
-          })
-      )
+      fetch(`https://fakestoreapi.com/products/${id}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Erro ao buscar produto: ${response.status}`)
+          }
+          return response.json()
+        })
+        .then((data: Product) => {
+          console.log('Dados recebidos:', data)
+          resolve(data)
+        })
+        .catch(error => {
+          console.error('Erro na requisição:', error)
+          resolve({ message: 'Produto não encontrado ou erro na requisição.' })
+        })
     }, 2000)
   })
 }
